@@ -85,5 +85,29 @@
     ],
     "notes": "Sustituto de la pastilla de caldo: usa 500-600 ml de caldo casero o de brik en lugar del agua y de la pastilla. Si no tienes caldo, sirve agua con una pizca extra de sal, una cucharadita de pimentón y el laurel",
     "updated": 1791295785117
+  },
+  {
+    "id": "muwrh780qu1v",
+    "fav": false,
+    "name": "Fajipizza",
+    "cat": "Cenas",
+    "author": "Ana",
+    "time": 15,
+    "serv": 1,
+    "ing": [
+      "1 tortilla integral para fajitas",
+      "Tomate natural",
+      "Queso mozzarella",
+      "Jamón cocido",
+      "Orégano",
+      "Orégano"
+    ],
+    "steps": [
+      "Precalienta el horno a 220 °C.",
+      "Monta la “pizza”",
+      "Mete en el horno durante 10 minutos"
+    ],
+    "notes": "Puedes incluir los ingredientes que prefieras. Recomendable el tomate especial pizza de Lidl (saludable)",
+    "updated": 1791296149968
   }
 ]
