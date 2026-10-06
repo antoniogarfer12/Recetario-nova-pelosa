@@ -15,7 +15,7 @@ wb = Workbook()
 ws = wb.active
 ws.title = "Recetas"
 columnas = [
-    ("Nombre", 28), ("Categoría", 14), ("Tiempo (min)", 13), ("Raciones", 10),
+    ("Nombre", 28), ("Categoría", 14), ("Hecha por", 16), ("Tiempo (min)", 13), ("Raciones", 10),
     ("Ingredientes", 40), ("Pasos", 60), ("Notas", 35), ("Favorita", 10),
     ("Última modificación", 20),
 ]
@@ -32,6 +32,7 @@ for r in recetas:
     ws.append([
         r.get("name", ""),
         r.get("cat", ""),
+        r.get("author", ""),
         r.get("time"),
         r.get("serv"),
         "\n".join(r.get("ing") or []),
@@ -44,7 +45,7 @@ for r in recetas:
 for fila in ws.iter_rows(min_row=2):
     for celda in fila:
         celda.alignment = Alignment(wrap_text=True, vertical="top")
-    fila[8].number_format = "dd/mm/yyyy hh:mm"
+    fila[9].number_format = "dd/mm/yyyy hh:mm"
 
 ws.freeze_panes = "A2"
 ws.auto_filter.ref = ws.dimensions

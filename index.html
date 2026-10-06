@@ -83,6 +83,9 @@ header .sync-line{margin-top:-1rem;font-size:.9rem}
 .help ol{padding-left:1.3rem}
 .help code{background:var(--surface);border:1px solid var(--line);border-radius:.3rem;padding:0 .3rem}
 .btn[disabled]{opacity:.6;cursor:progress}
+.pick{display:flex;gap:.5rem}
+.pick select{flex:1}
+.pick .btn{padding:0 1rem;font-size:1.3rem;line-height:1}
 </style>
 </head>
 <body>
@@ -96,7 +99,7 @@ header .sync-line{margin-top:-1rem;font-size:.9rem}
       <p class="sync-line"><span id="sync-status">Cargando recetas…</span> · <button class="link" data-go="sync">Sincronización</button></p>
     </header>
     <div class="bar">
-      <input id="q" class="search" type="search" placeholder="Buscar receta o ingrediente…" aria-label="Buscar">
+      <input id="q" class="search" type="search" placeholder="Buscar receta, ingrediente o autor…" aria-label="Buscar">
     </div>
     <div id="chips" class="chips" role="group" aria-label="Filtrar por categoría"></div>
     <div id="list" class="list"></div>
@@ -119,6 +122,11 @@ header .sync-line{margin-top:-1rem;font-size:.9rem}
           <input id="f-time" type="number" min="0" inputmode="numeric" placeholder="40"></div>
         <div><label for="f-serv">Raciones</label>
           <input id="f-serv" type="number" min="1" inputmode="numeric" placeholder="4"></div>
+      </div>
+      <label for="f-author">Hecha por</label>
+      <div class="pick">
+        <select id="f-author"></select>
+        <button type="button" class="btn btn-ghost" id="add-author" aria-label="Añadir nombre" title="Añadir nombre">+</button>
       </div>
       <label for="f-ing">Ingredientes <span class="hint">· uno por línea</span></label>
       <textarea id="f-ing" placeholder="6 huevos&#10;4 patatas&#10;1 cebolla&#10;Aceite de oliva&#10;Sal"></textarea>
@@ -265,7 +273,7 @@ function renderList(){
   let items=recipes.slice().sort((a,b)=>b.updated-a.updated);
   if(filter==="Favoritas") items=items.filter(r=>r.fav);
   else if(filter!=="Todas") items=items.filter(r=>r.cat===filter);
-  if(q) items=items.filter(r=>(r.name+" "+r.ing.join(" ")).toLowerCase().includes(q));
+  if(q) items=items.filter(r=>(r.name+" "+(r.author||"")+" "+r.ing.join(" ")).toLowerCase().includes(q));
   $("#count").textContent=recipes.length?`${recipes.length} receta${recipes.length>1?"s":""} guardada${recipes.length>1?"s":""}.`:"Tus recetas, siempre a mano.";
   if(!recipes.length){
     $("#list").innerHTML=`<div class="empty"><h2>Aún no hay recetas</h2><p>Apunta la primera con el botón “Nueva receta”.</p></div>`;return;
@@ -275,7 +283,7 @@ function renderList(){
     <button class="card" data-open="${r.id}">
       ${r.fav?'<span class="fav" aria-label="Favorita">★</span>':""}
       <h3>${esc(r.name)}</h3>
-      <div class="meta"><span>${esc(r.cat)}</span>${r.time?`<span>${r.time} min</span>`:""}${r.serv?`<span>${r.serv} raciones</span>`:""}<span>${r.ing.length} ingredientes</span></div>
+      <div class="meta"><span>${esc(r.cat)}</span>${r.author?`<span>por ${esc(r.author)}</span>`:""}${r.time?`<span>${r.time} min</span>`:""}${r.serv?`<span>${r.serv} raciones</span>`:""}<span>${r.ing.length} ingredientes</span></div>
     </button>`).join("");
 }
 
@@ -284,7 +292,7 @@ function renderDetail(id){
   $("#v-detail").innerHTML=`
     <button class="back" data-go="list">‹ Todas las recetas</button>
     <h2>${esc(r.name)}</h2>
-    <div class="meta"><span>${esc(r.cat)}</span>${r.time?`<span>${r.time} min</span>`:""}${r.serv?`<span>${r.serv} raciones</span>`:""}</div>
+    <div class="meta"><span>${esc(r.cat)}</span>${r.author?`<span>por ${esc(r.author)}</span>`:""}${r.time?`<span>${r.time} min</span>`:""}${r.serv?`<span>${r.serv} raciones</span>`:""}</div>
     ${r.ing.length?`<section><h3>Ingredientes</h3><ul class="ing">${r.ing.map((i,n)=>`<li><input type="checkbox" id="i${n}" aria-label="Tengo ${esc(i)}"><span>${esc(i)}</span></li>`).join("")}</ul></section>`:""}
     ${r.steps.length?`<section><h3>Preparación</h3><ol class="steps">${r.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol></section>`:""}
     ${r.notes?`<section><h3>Notas</h3><div class="notes">${esc(r.notes)}</div></section>`:""}
@@ -302,6 +310,7 @@ function openForm(id){
   $("#form-title").textContent=r?"Editar receta":"Nueva receta";
   $("#f-name").value=r?.name||"";
   $("#f-cat").value=r?.cat||"Principales";
+  fillAuthors(r?.author||store.get(AUTHOR_KEY)||"");
   $("#f-time").value=r?.time||"";
   $("#f-serv").value=r?.serv||"";
   $("#f-ing").value=r?r.ing.join("\n"):"";
@@ -312,11 +321,29 @@ function openForm(id){
 
 $("#f-cat").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
 
+// Los nombres del desplegable salen de las recetas ya guardadas, más los añadidos con "+"
+const AUTHOR_KEY="recetario-ultimo-autor";
+let extraAuthors=[];
+function fillAuthors(selected){
+  const names=[...new Set([...recipes.map(r=>r.author),...extraAuthors,selected].filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,"es"));
+  $("#f-author").innerHTML=`<option value="">— Sin indicar —</option>`+names.map(n=>`<option>${esc(n)}</option>`).join("");
+  $("#f-author").value=selected||"";
+}
+$("#add-author").addEventListener("click",()=>{
+  const name=(prompt("Nombre de quien ha hecho la receta:")||"").trim().replace(/\s+/g," ");
+  if(!name) return;
+  const existing=[...$("#f-author").options].find(o=>o.value.toLowerCase()===name.toLowerCase());
+  if(existing){$("#f-author").value=existing.value;return;}
+  extraAuthors.push(name); fillAuthors(name);
+});
+
 $("#form").addEventListener("submit",async e=>{
   e.preventDefault();
   const data={
     name:$("#f-name").value.trim(),
     cat:$("#f-cat").value,
+    author:$("#f-author").value,
     time:parseInt($("#f-time").value)||null,
     serv:parseInt($("#f-serv").value)||null,
     ing:lines($("#f-ing").value),
@@ -332,6 +359,7 @@ $("#form").addEventListener("submit",async e=>{
     if(r) Object.assign(r,data); else list.push({id,fav:false,...data});
   },(editingId?"Editar":"Añadir")+" receta: "+data.name);
   btn.disabled=false;
+  if(ok&&data.author) store.set(AUTHOR_KEY,data.author);
   if(ok){toast("Receta guardada"); renderList(); renderDetail(id);}
 });
 
