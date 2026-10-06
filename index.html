@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi recetario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2E6; --surface:#FFFFFF; --ink:#2B1E2F; --muted:#6B7062;
+  --line:#D6DCCB; --accent:#E2B33C; --accent-ink:#2B1E2F; --danger:#B3402E;
+  --serif:"Young Serif", Georgia, "Times New Roman", serif;
+  --sans:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1A1A17; --surface:#25251F; --ink:#ECE9DF; --muted:#A3A693;
+    --line:#3A3B32; --accent:#E2B33C; --accent-ink:#1A1A17; --danger:#E0715E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1A1A17; --surface:#25251F; --ink:#ECE9DF; --muted:#A3A693;
+  --line:#3A3B32; --accent:#E2B33C; --accent-ink:#1A1A17; --danger:#E0715E;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:1rem;line-height:1.5}
+.wrap{max-width:46rem;margin:0 auto;padding:1.5rem 1rem 6rem}
+h1,h2,h3{font-family:var(--serif);font-weight:400;margin:0;line-height:1.15}
+h1{font-size:clamp(2.2rem,8vw,3.2rem)}
+header p{color:var(--muted);margin:.4rem 0 1.4rem}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.bar{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem}
+.search{flex:1 1 14rem;padding:.75rem 1rem;border:1.5px solid var(--line);border-radius:999px;background:var(--surface)}
+.chips{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.3rem;margin-bottom:1.2rem}
+.chip{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:.35rem .9rem;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn{border:0;border-radius:.6rem;padding:.75rem 1.1rem;font-weight:600}
+.btn-main{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:transparent;border:1.5px solid var(--line)}
+.btn-danger{background:transparent;color:var(--danger);border:1.5px solid currentColor}
+.list{display:grid;gap:.9rem}
+.card{position:relative;background:var(--surface);border-radius:.3rem .9rem .9rem .3rem;padding:1rem 1.1rem 1rem 1.5rem;border:1px solid var(--line);text-align:left;width:100%}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.45rem;background:var(--accent);border-radius:.3rem 0 0 .3rem}
+.card h3{font-size:1.3rem;margin-bottom:.3rem}
+.meta{color:var(--muted);font-size:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+.fav{position:absolute;right:.9rem;top:.8rem;font-size:1.2rem}
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty h2{color:var(--ink);font-size:1.6rem;margin-bottom:.5rem}
+.fab{position:fixed;right:1rem;bottom:calc(1rem + env(safe-area-inset-bottom,0px));box-shadow:0 6px 18px rgba(43,30,47,.25);border-radius:999px;padding:1rem 1.4rem}
+/* detalle y formulario */
+.view{display:none}.view.on{display:block}
+.back{background:none;border:0;color:var(--muted);padding:0;margin-bottom:1rem}
+.detail h2{font-size:clamp(1.9rem,6vw,2.6rem);margin-bottom:.6rem}
+.detail section{margin-top:1.6rem}
+.detail h3{font-size:1.25rem;margin-bottom:.6rem}
+.ing{list-style:none;padding:0;margin:0}
+.ing li{padding:.5rem 0;border-bottom:1px dashed var(--line);display:flex;gap:.7rem;align-items:flex-start}
+.ing input{width:1.2rem;height:1.2rem;margin-top:.2rem;accent-color:var(--accent)}
+.ing li.done span{text-decoration:line-through;color:var(--muted)}
+.steps{padding-left:1.4rem;margin:0}
+.steps li{margin-bottom:.8rem;padding-left:.3rem}
+.notes{background:var(--surface);border:1px solid var(--line);border-radius:.6rem;padding:.9rem 1rem;white-space:pre-wrap}
+.actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:2rem}
+form label{display:block;font-weight:600;margin:1rem 0 .35rem}
+form .hint{font-weight:400;color:var(--muted);font-size:.85rem}
+form input,form textarea,form select{width:100%;padding:.7rem .85rem;border:1.5px solid var(--line);border-radius:.5rem;background:var(--surface)}
+form textarea{min-height:7rem;resize:vertical}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:0 .8rem}
+.toast{position:fixed;left:50%;bottom:calc(5.5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.6rem 1.1rem;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- LISTA -->
+  <div id="v-list" class="view on">
+    <header>
+      <h1>Mi recetario</h1>
+      <p id="count">Tus recetas, siempre a mano.</p>
+    </header>
+    <div class="bar">
+      <input id="q" class="search" type="search" placeholder="Buscar receta o ingrediente…" aria-label="Buscar">
+    </div>
+    <div id="chips" class="chips" role="group" aria-label="Filtrar por categoría"></div>
+    <div id="list" class="list"></div>
+  </div>
+
+  <!-- DETALLE -->
+  <div id="v-detail" class="view detail"></div>
+
+  <!-- FORMULARIO -->
+  <div id="v-form" class="view">
+    <button class="back" data-go="list">‹ Volver</button>
+    <h2 id="form-title" style="font-size:2rem">Nueva receta</h2>
+    <form id="form">
+      <label for="f-name">Nombre</label>
+      <input id="f-name" required placeholder="Tortilla de patatas">
+      <div class="row">
+        <div><label for="f-cat">Categoría</label>
+          <select id="f-cat"></select></div>
+        <div><label for="f-time">Tiempo (min)</label>
+          <input id="f-time" type="number" min="0" inputmode="numeric" placeholder="40"></div>
+        <div><label for="f-serv">Raciones</label>
+          <input id="f-serv" type="number" min="1" inputmode="numeric" placeholder="4"></div>
+      </div>
+      <label for="f-ing">Ingredientes <span class="hint">· uno por línea</span></label>
+      <textarea id="f-ing" placeholder="6 huevos&#10;4 patatas&#10;1 cebolla&#10;Aceite de oliva&#10;Sal"></textarea>
+      <label for="f-steps">Pasos <span class="hint">· uno por línea</span></label>
+      <textarea id="f-steps" placeholder="Pelar y cortar las patatas en láminas finas&#10;Freírlas a fuego medio con la cebolla&#10;Batir los huevos y mezclar"></textarea>
+      <label for="f-notes">Notas</label>
+      <textarea id="f-notes" style="min-height:4.5rem" placeholder="Truco de la abuela, variaciones…"></textarea>
+      <div class="actions">
+        <button type="submit" class="btn btn-main">Guardar receta</button>
+        <button type="button" class="btn btn-ghost" data-go="list">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<button id="add" class="btn btn-main fab">+ Nueva receta</button>
+<div id="toast" class="toast" role="status"></div>
+
+<script>
+const CATS=["Entrantes","Principales","Postres","Desayunos","Bebidas","Otros"];
+const KEY="recetario-v1";
+let recipes=[], filter="Todas", editingId=null;
+
+function load(){
+  try{const r=localStorage.getItem(KEY); recipes=r?JSON.parse(r):[];}catch(e){recipes=[];}
+  if(!Array.isArray(recipes)) recipes=[];
+}
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(recipes));}catch(e){toast("No se ha podido guardar en este navegador");} }
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const lines=s=>s.split("\n").map(x=>x.trim()).filter(Boolean);
+
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),1800);}
+
+function show(v){
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
+  $("#add").style.display=v==="list"?"":"none";
+  window.scrollTo(0,0);
+}
+
+function renderChips(){
+  const used=["Todas","Favoritas",...CATS.filter(c=>recipes.some(r=>r.cat===c))];
+  $("#chips").innerHTML=used.map(c=>`<button class="chip" aria-pressed="${c===filter}" data-chip="${c}">${c}</button>`).join("");
+}
+
+function renderList(){
+  renderChips();
+  const q=$("#q").value.trim().toLowerCase();
+  let items=recipes.slice().sort((a,b)=>b.updated-a.updated);
+  if(filter==="Favoritas") items=items.filter(r=>r.fav);
+  else if(filter!=="Todas") items=items.filter(r=>r.cat===filter);
+  if(q) items=items.filter(r=>(r.name+" "+r.ing.join(" ")).toLowerCase().includes(q));
+  $("#count").textContent=recipes.length?`${recipes.length} receta${recipes.length>1?"s":""} guardada${recipes.length>1?"s":""}.`:"Tus recetas, siempre a mano.";
+  if(!recipes.length){
+    $("#list").innerHTML=`<div class="empty"><h2>Aún no hay recetas</h2><p>Apunta la primera con el botón “Nueva receta”.</p></div>`;return;
+  }
+  if(!items.length){$("#list").innerHTML=`<div class="empty"><p>Ninguna receta coincide. Prueba con otra palabra o categoría.</p></div>`;return;}
+  $("#list").innerHTML=items.map(r=>`
+    <button class="card" data-open="${r.id}">
+      ${r.fav?'<span class="fav" aria-label="Favorita">★</span>':""}
+      <h3>${esc(r.name)}</h3>
+      <div class="meta"><span>${esc(r.cat)}</span>${r.time?`<span>${r.time} min</span>`:""}${r.serv?`<span>${r.serv} raciones</span>`:""}<span>${r.ing.length} ingredientes</span></div>
+    </button>`).join("");
+}
+
+function renderDetail(id){
+  const r=recipes.find(x=>x.id===id); if(!r) return show("list");
+  $("#v-detail").innerHTML=`
+    <button class="back" data-go="list">‹ Todas las recetas</button>
+    <h2>${esc(r.name)}</h2>
+    <div class="meta"><span>${esc(r.cat)}</span>${r.time?`<span>${r.time} min</span>`:""}${r.serv?`<span>${r.serv} raciones</span>`:""}</div>
+    ${r.ing.length?`<section><h3>Ingredientes</h3><ul class="ing">${r.ing.map((i,n)=>`<li><input type="checkbox" id="i${n}" aria-label="Tengo ${esc(i)}"><span>${esc(i)}</span></li>`).join("")}</ul></section>`:""}
+    ${r.steps.length?`<section><h3>Preparación</h3><ol class="steps">${r.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol></section>`:""}
+    ${r.notes?`<section><h3>Notas</h3><div class="notes">${esc(r.notes)}</div></section>`:""}
+    <div class="actions">
+      <button class="btn btn-main" data-fav="${r.id}">${r.fav?"Quitar de favoritas":"Marcar como favorita"}</button>
+      <button class="btn btn-ghost" data-edit="${r.id}">Editar</button>
+      <button class="btn btn-danger" data-del="${r.id}">Borrar</button>
+    </div>`;
+  show("detail");
+}
+
+function openForm(id){
+  editingId=id||null;
+  const r=id?recipes.find(x=>x.id===id):null;
+  $("#form-title").textContent=r?"Editar receta":"Nueva receta";
+  $("#f-name").value=r?.name||"";
+  $("#f-cat").value=r?.cat||"Principales";
+  $("#f-time").value=r?.time||"";
+  $("#f-serv").value=r?.serv||"";
+  $("#f-ing").value=r?r.ing.join("\n"):"";
+  $("#f-steps").value=r?r.steps.join("\n"):"";
+  $("#f-notes").value=r?.notes||"";
+  show("form"); $("#f-name").focus();
+}
+
+$("#f-cat").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
+
+$("#form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const data={
+    name:$("#f-name").value.trim(),
+    cat:$("#f-cat").value,
+    time:parseInt($("#f-time").value)||null,
+    serv:parseInt($("#f-serv").value)||null,
+    ing:lines($("#f-ing").value),
+    steps:lines($("#f-steps").value),
+    notes:$("#f-notes").value.trim(),
+    updated:Date.now()
+  };
+  if(!data.name) return;
+  let id=editingId;
+  if(id){Object.assign(recipes.find(x=>x.id===id),data);}
+  else{id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);recipes.push({id,fav:false,...data});}
+  save(); toast("Receta guardada"); renderList(); renderDetail(id);
+});
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button,li"); if(!t) return;
+  if(t.dataset.go){ if(t.dataset.go==="list"){renderList();show("list");} }
+  else if(t.dataset.chip){filter=t.dataset.chip;renderList();}
+  else if(t.dataset.open){renderDetail(t.dataset.open);}
+  else if(t.dataset.edit){openForm(t.dataset.edit);}
+  else if(t.dataset.fav){const r=recipes.find(x=>x.id===t.dataset.fav);r.fav=!r.fav;save();renderDetail(r.id);toast(r.fav?"Añadida a favoritas":"Quitada de favoritas");}
+  else if(t.dataset.del){
+    const r=recipes.find(x=>x.id===t.dataset.del);
+    if(confirm(`¿Borrar “${r.name}”? No se puede deshacer.`)){recipes=recipes.filter(x=>x.id!==r.id);save();renderList();show("list");toast("Receta borrada");}
+  }
+  else if(t.id==="add"){openForm();}
+});
+document.addEventListener("change",e=>{if(e.target.matches(".ing input")) e.target.closest("li").classList.toggle("done",e.target.checked);});
+$("#q").addEventListener("input",renderList);
+
+load(); renderList();
+</script>
+</body>
+</html>
