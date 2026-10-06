@@ -79,9 +79,6 @@ form textarea{min-height:7rem;resize:vertical}
 @media (prefers-reduced-motion: reduce){.toast{transition:none}}
 header .sync-line{margin-top:-1rem;font-size:.9rem}
 .link{background:none;border:0;padding:0;color:inherit;text-decoration:underline;text-underline-offset:2px}
-.help{color:var(--muted);font-size:.95rem}
-.help ol{padding-left:1.3rem}
-.help code{background:var(--surface);border:1px solid var(--line);border-radius:.3rem;padding:0 .3rem}
 .btn[disabled]{opacity:.6;cursor:progress}
 .pick{display:flex;gap:.5rem}
 .pick select{flex:1}
@@ -144,22 +141,11 @@ header .sync-line{margin-top:-1rem;font-size:.9rem}
   <!-- SINCRONIZACIÓN -->
   <div id="v-sync" class="view">
     <button class="back" data-go="list">‹ Volver</button>
-    <h2 style="font-size:2rem">Sincronización</h2>
-    <div class="help">
-      <p>Las recetas se guardan en el archivo <code>recetas.json</code> del repositorio de GitHub, y cada cambio actualiza automáticamente <code>recetas.xlsx</code>. Para añadir o editar recetas desde este dispositivo necesitas un token de GitHub (se configura una sola vez y solo se guarda en este navegador).</p>
-      <ol>
-        <li>Abre <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li>
-        <li>Ponle un nombre (p. ej. “Recetario”) y una caducidad.</li>
-        <li>En <b>Repository access</b> elige “Only select repositories” → <b>Recetario-nova-pelosa</b>.</li>
-        <li>En <b>Permissions → Repository permissions</b>, pon <b>Contents</b> en “Read and write”.</li>
-        <li>Genera el token, cópialo y pégalo aquí.</li>
-      </ol>
-    </div>
     <form id="sync-form">
-      <label for="f-token">Token de GitHub</label>
+      <h2 style="font-size:2rem;margin-bottom:.8rem"><label for="f-token" style="font-weight:400;margin:0">Token</label></h2>
       <input id="f-token" type="password" autocomplete="off" placeholder="github_pat_…">
       <div class="actions">
-        <button type="submit" class="btn btn-main">Guardar y probar</button>
+        <button type="submit" class="btn btn-main">Guardar</button>
         <button type="button" class="btn btn-danger" id="forget">Olvidar token</button>
       </div>
     </form>
