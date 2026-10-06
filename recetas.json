@@ -56,12 +56,20 @@
     "time": 15,
     "serv": null,
     "ing": [
-      "14 galletas maria"
+      "14 galletas maria",
+      "Vaso de leche",
+      "Paquete galletas oreo",
+      "Nata de montar"
     ],
     "steps": [
-      "Triturar galletas María"
+      "Meter galletas María y vaso de leche caliente  en trituradora",
+      "Triturar",
+      "Metemos la mezcla en la nevera",
+      "En un recipiente de montar nata, trituramos las galletas oreo con la mano y añadimos nata hasta que cubra. Trituramos y montamos",
+      "Servimos encima de la mezcla de galleta María.",
+      "Hacemos polvo otras galletas oreo y servimos encima"
     ],
     "notes": "https://www.instagram.com/reel/DOER-GjCHru/?stkn=MWNjZjIwY2x4MXdtcQ==",
-    "updated": 1791286656864
+    "updated": 1791287052080
   }
 ]
