@@ -109,5 +109,32 @@
     ],
     "notes": "Puedes incluir los ingredientes que prefieras. Recomendable el tomate especial pizza de Lidl (saludable)",
     "updated": 1791296149968
+  },
+  {
+    "id": "mux160jry6ot",
+    "fav": false,
+    "name": "Pimientos a la Cerdeña Style",
+    "cat": "Comidas",
+    "author": "Martí",
+    "time": 25,
+    "serv": 4,
+    "ing": [
+      "4/5 pimientos Rojos / Amarillos (No VERDeS)",
+      "1 diente de Ajo (entero)",
+      "Aceitunas negras (con o sin hueso)",
+      "Aceite",
+      "Alcaparras (bajo sal)",
+      "Anchoas (si tienes)"
+    ],
+    "steps": [
+      "-hornear los pimientos (35/40) mins a 180º",
+      "-Quitar la piel a todos los pimientos y cortar en líneas verticales",
+      "- sofreír un diente de ajo entero con las alcaparras y las anchoas",
+      "-añadir los pimientos",
+      "-añadir las aceitunas",
+      "-remover todo por 5/10 minutos y apaga"
+    ],
+    "notes": "",
+    "updated": 1791312424263
   }
 ]
