@@ -51,5 +51,39 @@
     ],
     "notes": "https://www.instagram.com/reel/DOER-GjCHru/?stkn=MWNjZjIwY2x4MXdtcQ==",
     "updated": 1791287052080
+  },
+  {
+    "id": "muwr85bc5fdo",
+    "fav": false,
+    "name": "Guiso de patatas con magro",
+    "cat": "Comidas",
+    "author": "Ana",
+    "time": 60,
+    "serv": null,
+    "ing": [
+      "•\t1 cebolla",
+      "•\t1 puerro",
+      "•\t1-2 dientes de ajo",
+      "•\t50 g de aceite de oliva",
+      "•\t300 g de magro de cerdo en dados",
+      "•\t100 g de tomate frito",
+      "•\t1 hoja de laurel",
+      "•\t1 cucharadita de pimentón",
+      "•\t100 ml de vino blanco",
+      "•\t500-600 ml de agua",
+      "•\t1 pastilla de caldo",
+      "•\t600 g de patatas en trozos",
+      "•\t2 zanahorias en rodajas",
+      "•\t100 g de guisantes en conserva"
+    ],
+    "steps": [
+      "1.\tPica fina la cebolla, el puerro y el ajo. Sofríelos en una cazuela con el aceite a fuego medio unos 5 minutos, removiendo.",
+      "2.\tAñade el magro, el tomate frito y el laurel. Aparta la cazuela del fuego un momento, echa el pimentón y remueve para que no se queme. Rehoga 5 minutos.",
+      "3.\tVierte el vino y deja que evapore un par de minutos. Añade el agua y la pastilla de caldo, y cuece tapado a fuego suave unos 15-20 minutos para que el magro empiece a ablandarse.",
+      "4.\tIncorpora las patatas y las zanahorias, con más agua si hace falta para cubrirlas. Cuece tapado a fuego suave 20-25 minutos más, hasta que estén tiernas.",
+      "5.\tAñade los guisantes escurridos, mezcla con cuidado y deja 2-3 minutos. Rectifica de sal y sirve."
+    ],
+    "notes": "Sustituto de la pastilla de caldo: usa 500-600 ml de caldo casero o de brik en lugar del agua y de la pastilla. Si no tienes caldo, sirve agua con una pizca extra de sal, una cucharadita de pimentón y el laurel",
+    "updated": 1791295727592
   }
 ]
