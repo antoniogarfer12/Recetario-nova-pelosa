@@ -216,11 +216,24 @@
     "name": "Fideua con chipirones",
     "cat": "Comidas",
     "author": "María",
-    "time": null,
+    "time": 120,
     "serv": null,
-    "ing": [],
+    "ing": [
+      "Chipirones",
+      "Gambas",
+      "Caldo de pescado",
+      "Fideos de Fideua",
+      "Tomate triturado",
+      "Cebolla morada",
+      "Ajo",
+      "Vino tinto",
+      "Azafrán",
+      "Sal",
+      "Aceite",
+      "Mucho amor"
+    ],
     "steps": [],
     "notes": "",
-    "updated": 1791316555699
+    "updated": 1791316693236
   }
 ]
