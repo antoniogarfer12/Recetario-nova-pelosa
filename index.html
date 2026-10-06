@@ -202,7 +202,7 @@ async function mutate(fn,message){
       catch(e){if(!e.conflict||i>=2) throw e;}
     }
     store.set(CACHE_KEY,JSON.stringify(recipes));
-    setStatus("Sincronizado con GitHub");
+    setStatus("Sincronizado");
     return true;
   }catch(e){
     setStatus("Error al guardar: "+e.message);
@@ -223,7 +223,7 @@ async function sync(){
   try{
     const {list}=await fetchRemote();
     recipes=list; store.set(CACHE_KEY,JSON.stringify(recipes));
-    setStatus(token?"Sincronizado con GitHub":"Solo lectura");
+    setStatus(token?"Sincronizado":"Solo lectura");
     await migrateLocal();
   }catch(e){
     setStatus("Sin conexión con GitHub ("+e.message+"), mostrando copia local");
