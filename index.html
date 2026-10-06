@@ -185,7 +185,7 @@ header .sync-line{margin-top:-1rem;font-size:.9rem}
 <div id="toast" class="toast" role="status"></div>
 
 <script>
-const CATS=["Desayunos","Comidas","Cenas","Entrantes","Principales","Postres","Bebidas","Otros"];
+const CATS=["Desayunos","Comidas","Cenas","Entrantes","Postres","Bebidas"];
 const OLD_KEY="recetario-v1", CACHE_KEY="recetario-cache-v2", TOKEN_KEY="recetario-token", MENU_CACHE_KEY="recetario-menu";
 const REPO="antoniogarfer12/Recetario-nova-pelosa", FILE="recetas.json", MENU_FILE="menu.json", BRANCH="main";
 const apiUrl=file=>`https://api.github.com/repos/${REPO}/contents/${file}`;
@@ -381,7 +381,7 @@ function openForm(id){
   const r=id?recipes.find(x=>x.id===id):null;
   $("#form-title").textContent=r?"Editar receta":"Nueva receta";
   $("#f-name").value=r?.name||"";
-  fillCats(r?.cat||"Principales");
+  fillCats(r?.cat||"Comidas");
   fillAuthors(r?.author||store.get(AUTHOR_KEY)||"");
   $("#f-time").value=r?.time||"";
   $("#f-serv").value=r?.serv||"";
