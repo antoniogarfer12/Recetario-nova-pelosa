@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "id": "muwekwz33cep",
+    "fav": false,
+    "name": "Prueba",
+    "cat": "Principales",
+    "author": "Antonio",
+    "time": 20,
+    "serv": 1,
+    "ing": [
+      "Pollo"
+    ],
+    "steps": [
+      "Pon el pollo a la plancha"
+    ],
+    "notes": "",
+    "updated": 1791274488303
+  }
+]
