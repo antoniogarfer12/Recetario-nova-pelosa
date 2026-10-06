@@ -335,7 +335,9 @@ function renderMenu(){
 }
 
 function renderChips(){
-  const used=["Todas","Favoritas",...allCats().filter(c=>recipes.some(r=>r.cat===c))];
+  // Desayunos, Comidas y Postres siempre visibles; el resto solo si hay recetas de esa categoría
+  const fixed=["Desayunos","Comidas","Postres"];
+  const used=["Todas","Favoritas",...allCats().filter(c=>fixed.includes(c)||recipes.some(r=>r.cat===c))];
   $("#chips").innerHTML=used.map(c=>`<button class="chip" aria-pressed="${c===filter}" data-chip="${esc(c)}">${esc(c)}</button>`).join("");
 }
 
