@@ -77,6 +77,12 @@ form textarea{min-height:7rem;resize:vertical}
 .toast{position:fixed;left:50%;bottom:calc(5.5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.6rem 1.1rem;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 @media (prefers-reduced-motion: reduce){.toast{transition:none}}
+header .sync-line{margin-top:-1rem;font-size:.9rem}
+.link{background:none;border:0;padding:0;color:inherit;text-decoration:underline;text-underline-offset:2px}
+.help{color:var(--muted);font-size:.95rem}
+.help ol{padding-left:1.3rem}
+.help code{background:var(--surface);border:1px solid var(--line);border-radius:.3rem;padding:0 .3rem}
+.btn[disabled]{opacity:.6;cursor:progress}
 </style>
 </head>
 <body>
@@ -87,6 +93,7 @@ form textarea{min-height:7rem;resize:vertical}
     <header>
       <h1>Mi recetario</h1>
       <p id="count">Tus recetas, siempre a mano.</p>
+      <p class="sync-line"><span id="sync-status">Cargando recetas…</span> · <button class="link" data-go="sync">Sincronización</button></p>
     </header>
     <div class="bar">
       <input id="q" class="search" type="search" placeholder="Buscar receta o ingrediente…" aria-label="Buscar">
@@ -125,6 +132,30 @@ form textarea{min-height:7rem;resize:vertical}
       </div>
     </form>
   </div>
+
+  <!-- SINCRONIZACIÓN -->
+  <div id="v-sync" class="view">
+    <button class="back" data-go="list">‹ Volver</button>
+    <h2 style="font-size:2rem">Sincronización</h2>
+    <div class="help">
+      <p>Las recetas se guardan en el archivo <code>recetas.json</code> del repositorio de GitHub, y cada cambio actualiza automáticamente <code>recetas.xlsx</code>. Para añadir o editar recetas desde este dispositivo necesitas un token de GitHub (se configura una sola vez y solo se guarda en este navegador).</p>
+      <ol>
+        <li>Abre <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li>
+        <li>Ponle un nombre (p. ej. “Recetario”) y una caducidad.</li>
+        <li>En <b>Repository access</b> elige “Only select repositories” → <b>Recetario-nova-pelosa</b>.</li>
+        <li>En <b>Permissions → Repository permissions</b>, pon <b>Contents</b> en “Read and write”.</li>
+        <li>Genera el token, cópialo y pégalo aquí.</li>
+      </ol>
+    </div>
+    <form id="sync-form">
+      <label for="f-token">Token de GitHub</label>
+      <input id="f-token" type="password" autocomplete="off" placeholder="github_pat_…">
+      <div class="actions">
+        <button type="submit" class="btn btn-main">Guardar y probar</button>
+        <button type="button" class="btn btn-danger" id="forget">Olvidar token</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <button id="add" class="btn btn-main fab">+ Nueva receta</button>
@@ -132,14 +163,85 @@ form textarea{min-height:7rem;resize:vertical}
 
 <script>
 const CATS=["Entrantes","Principales","Postres","Desayunos","Bebidas","Otros"];
-const KEY="recetario-v1";
-let recipes=[], filter="Todas", editingId=null;
+const OLD_KEY="recetario-v1", CACHE_KEY="recetario-cache-v2", TOKEN_KEY="recetario-token";
+const REPO="antoniogarfer12/Recetario-nova-pelosa", FILE="recetas.json", BRANCH="main";
+const API=`https://api.github.com/repos/${REPO}/contents/${FILE}`;
+let recipes=[], filter="Todas", editingId=null, token="";
+
+const store={
+  get(k){try{return localStorage.getItem(k);}catch(e){return null;}},
+  set(k,v){try{localStorage.setItem(k,v);}catch(e){}},
+  del(k){try{localStorage.removeItem(k);}catch(e){}}
+};
+const parseList=s=>{try{const x=JSON.parse(s);return Array.isArray(x)?x:[];}catch(e){return [];}};
+const b64enc=s=>{let bin="";new TextEncoder().encode(s).forEach(b=>bin+=String.fromCharCode(b));return btoa(bin);};
+const b64dec=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,"")),c=>c.charCodeAt(0)));
+
+function setStatus(msg){$("#sync-status").textContent=msg;}
+
+// Lee recetas.json del repositorio (devuelve lista y sha para poder escribir después)
+async function fetchRemote(){
+  const h={Accept:"application/vnd.github+json"};
+  if(token) h.Authorization="Bearer "+token;
+  const res=await fetch(`${API}?ref=${BRANCH}`,{headers:h,cache:"no-store"});
+  if(res.status===404) return {list:[],sha:null};
+  if(!res.ok) throw new Error(res.status===401?"Token no válido o caducado":"GitHub respondió "+res.status);
+  const j=await res.json();
+  return {list:parseList(b64dec(j.content)),sha:j.sha};
+}
+async function putRemote(list,sha,message){
+  const res=await fetch(API,{method:"PUT",headers:{Accept:"application/vnd.github+json",Authorization:"Bearer "+token,"Content-Type":"application/json"},
+    body:JSON.stringify({message,branch:BRANCH,sha:sha||undefined,content:b64enc(JSON.stringify(list,null,2)+"\n")})});
+  if(res.status===409||res.status===422) throw Object.assign(new Error("conflict"),{conflict:true});
+  if(!res.ok) throw new Error(res.status===401||res.status===403?"El token no tiene permiso de escritura":"GitHub respondió "+res.status);
+}
+
+// Aplica un cambio sobre la versión más reciente del repo y la sube (reintenta si otro dispositivo escribió a la vez)
+async function mutate(fn,message){
+  if(!token){toast("Configura la sincronización para guardar cambios");show("sync");return false;}
+  setStatus("Guardando en GitHub…");
+  try{
+    for(let i=0;;i++){
+      const {list,sha}=await fetchRemote();
+      fn(list);
+      try{await putRemote(list,sha,message);recipes=list;break;}
+      catch(e){if(!e.conflict||i>=2) throw e;}
+    }
+    store.set(CACHE_KEY,JSON.stringify(recipes));
+    setStatus("Sincronizado con GitHub");
+    return true;
+  }catch(e){
+    setStatus("Error al guardar: "+e.message);
+    toast("No se ha podido guardar en GitHub");
+    return false;
+  }
+}
+
+// Sube recetas que se guardaron solo en este navegador con la versión antigua de la app
+async function migrateLocal(){
+  const old=parseList(store.get(OLD_KEY));
+  if(!old.length||!token) return;
+  const ok=await mutate(list=>{old.forEach(r=>{if(!list.some(x=>x.id===r.id)) list.push(r);});},`Subir ${old.length} receta(s) guardadas en el navegador`);
+  if(ok){store.del(OLD_KEY);toast("Recetas antiguas subidas a GitHub");}
+}
+
+async function sync(){
+  try{
+    const {list}=await fetchRemote();
+    recipes=list; store.set(CACHE_KEY,JSON.stringify(recipes));
+    setStatus(token?"Sincronizado con GitHub":"Solo lectura");
+    await migrateLocal();
+  }catch(e){
+    setStatus("Sin conexión con GitHub ("+e.message+"), mostrando copia local");
+  }
+  renderList();
+}
 
 function load(){
-  try{const r=localStorage.getItem(KEY); recipes=r?JSON.parse(r):[];}catch(e){recipes=[];}
-  if(!Array.isArray(recipes)) recipes=[];
+  token=store.get(TOKEN_KEY)||"";
+  recipes=parseList(store.get(CACHE_KEY));
+  if(!recipes.length) recipes=parseList(store.get(OLD_KEY));
 }
-function save(){ try{localStorage.setItem(KEY,JSON.stringify(recipes));}catch(e){toast("No se ha podido guardar en este navegador");} }
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const lines=s=>s.split("\n").map(x=>x.trim()).filter(Boolean);
@@ -210,7 +312,7 @@ function openForm(id){
 
 $("#f-cat").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
 
-$("#form").addEventListener("submit",e=>{
+$("#form").addEventListener("submit",async e=>{
   e.preventDefault();
   const data={
     name:$("#f-name").value.trim(),
@@ -223,29 +325,58 @@ $("#form").addEventListener("submit",e=>{
     updated:Date.now()
   };
   if(!data.name) return;
-  let id=editingId;
-  if(id){Object.assign(recipes.find(x=>x.id===id),data);}
-  else{id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);recipes.push({id,fav:false,...data});}
-  save(); toast("Receta guardada"); renderList(); renderDetail(id);
+  const id=editingId||Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const btn=e.submitter||$("#form [type=submit]"); btn.disabled=true;
+  const ok=await mutate(list=>{
+    const r=list.find(x=>x.id===id);
+    if(r) Object.assign(r,data); else list.push({id,fav:false,...data});
+  },(editingId?"Editar":"Añadir")+" receta: "+data.name);
+  btn.disabled=false;
+  if(ok){toast("Receta guardada"); renderList(); renderDetail(id);}
 });
 
-document.addEventListener("click",e=>{
+$("#sync-form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const t=$("#f-token").value.trim(); if(!t) return;
+  const btn=e.submitter||$("#sync-form [type=submit]"); btn.disabled=true;
+  try{
+    const res=await fetch(`https://api.github.com/repos/${REPO}`,{headers:{Accept:"application/vnd.github+json",Authorization:"Bearer "+t}});
+    if(!res.ok) throw new Error("token no válido");
+    const j=await res.json();
+    if(!j.permissions?.push) throw new Error("el token no tiene permiso de escritura en el repositorio");
+    token=t; store.set(TOKEN_KEY,t); $("#f-token").value="";
+    toast("Sincronización activada"); show("list"); await sync();
+  }catch(err){toast("No funciona: "+err.message);}
+  btn.disabled=false;
+});
+$("#forget").addEventListener("click",()=>{token="";store.del(TOKEN_KEY);setStatus("Solo lectura");toast("Token olvidado en este dispositivo");});
+
+document.addEventListener("click",async e=>{
   const t=e.target.closest("button,li"); if(!t) return;
-  if(t.dataset.go){ if(t.dataset.go==="list"){renderList();show("list");} }
+  if(t.dataset.go){ if(t.dataset.go==="list"){renderList();show("list");} else show(t.dataset.go); }
   else if(t.dataset.chip){filter=t.dataset.chip;renderList();}
   else if(t.dataset.open){renderDetail(t.dataset.open);}
   else if(t.dataset.edit){openForm(t.dataset.edit);}
-  else if(t.dataset.fav){const r=recipes.find(x=>x.id===t.dataset.fav);r.fav=!r.fav;save();renderDetail(r.id);toast(r.fav?"Añadida a favoritas":"Quitada de favoritas");}
+  else if(t.dataset.fav){
+    const id=t.dataset.fav, fav=!recipes.find(x=>x.id===id)?.fav;
+    t.disabled=true;
+    if(await mutate(list=>{const r=list.find(x=>x.id===id);if(r) r.fav=fav;},(fav?"Marcar":"Desmarcar")+" favorita")) toast(fav?"Añadida a favoritas":"Quitada de favoritas");
+    renderDetail(id);
+  }
   else if(t.dataset.del){
     const r=recipes.find(x=>x.id===t.dataset.del);
-    if(confirm(`¿Borrar “${r.name}”? No se puede deshacer.`)){recipes=recipes.filter(x=>x.id!==r.id);save();renderList();show("list");toast("Receta borrada");}
+    if(confirm(`¿Borrar “${r.name}”? No se puede deshacer.`)){
+      t.disabled=true;
+      if(await mutate(list=>{const i=list.findIndex(x=>x.id===r.id);if(i>=0) list.splice(i,1);},"Borrar receta: "+r.name)){renderList();show("list");toast("Receta borrada");}
+      else t.disabled=false;
+    }
   }
-  else if(t.id==="add"){openForm();}
+  else if(t.id==="add"){ if(token) openForm(); else {toast("Configura la sincronización para añadir recetas");show("sync");} }
 });
 document.addEventListener("change",e=>{if(e.target.matches(".ing input")) e.target.closest("li").classList.toggle("done",e.target.checked);});
 $("#q").addEventListener("input",renderList);
 
-load(); renderList();
+load(); renderList(); sync();
 </script>
 </body>
 </html>
