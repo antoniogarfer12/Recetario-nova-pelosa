@@ -55,9 +55,13 @@
     "author": "Antonio",
     "time": 15,
     "serv": null,
-    "ing": [],
-    "steps": [],
+    "ing": [
+      "14 galletas maria"
+    ],
+    "steps": [
+      "Triturar galletas María"
+    ],
     "notes": "https://www.instagram.com/reel/DOER-GjCHru/?stkn=MWNjZjIwY2x4MXdtcQ==",
-    "updated": 1791286591883
+    "updated": 1791286656864
   }
 ]
