@@ -114,7 +114,7 @@ header .sync-line{margin-top:-1rem;font-size:.9rem}
       <input id="f-name" required placeholder="Tortilla de patatas">
       <div class="row">
         <div><label for="f-cat">Categoría</label>
-          <select id="f-cat"></select></div>
+          <div class="pick"><select id="f-cat"></select><button type="button" class="btn btn-ghost" id="add-cat" aria-label="Añadir categoría" title="Añadir categoría">+</button></div></div>
         <div><label for="f-time">Tiempo (min)</label>
           <input id="f-time" type="number" min="0" inputmode="numeric" placeholder="40"></div>
         <div><label for="f-serv">Raciones</label>
@@ -249,8 +249,8 @@ function show(v){
 }
 
 function renderChips(){
-  const used=["Todas","Favoritas",...CATS.filter(c=>recipes.some(r=>r.cat===c))];
-  $("#chips").innerHTML=used.map(c=>`<button class="chip" aria-pressed="${c===filter}" data-chip="${c}">${c}</button>`).join("");
+  const used=["Todas","Favoritas",...allCats().filter(c=>recipes.some(r=>r.cat===c))];
+  $("#chips").innerHTML=used.map(c=>`<button class="chip" aria-pressed="${c===filter}" data-chip="${esc(c)}">${esc(c)}</button>`).join("");
 }
 
 function renderList(){
@@ -295,7 +295,7 @@ function openForm(id){
   const r=id?recipes.find(x=>x.id===id):null;
   $("#form-title").textContent=r?"Editar receta":"Nueva receta";
   $("#f-name").value=r?.name||"";
-  $("#f-cat").value=r?.cat||"Principales";
+  fillCats(r?.cat||"Principales");
   fillAuthors(r?.author||store.get(AUTHOR_KEY)||"");
   $("#f-time").value=r?.time||"";
   $("#f-serv").value=r?.serv||"";
@@ -305,7 +305,25 @@ function openForm(id){
   show("form"); $("#f-name").focus();
 }
 
-$("#f-cat").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
+// Categorías: las fijas, más las que ya usan las recetas, más las añadidas con "+"
+let extraCats=[];
+function allCats(){
+  const custom=[...new Set([...recipes.map(r=>r.cat),...extraCats].filter(c=>c&&!CATS.includes(c)))]
+    .sort((a,b)=>a.localeCompare(b,"es"));
+  return [...CATS,...custom];
+}
+function fillCats(selected){
+  if(selected&&!allCats().includes(selected)) extraCats.push(selected);
+  $("#f-cat").innerHTML=allCats().map(c=>`<option>${esc(c)}</option>`).join("");
+  $("#f-cat").value=selected;
+}
+$("#add-cat").addEventListener("click",()=>{
+  const name=(prompt("Nombre de la nueva categoría:")||"").trim().replace(/\s+/g," ");
+  if(!name) return;
+  const existing=allCats().find(c=>c.toLowerCase()===name.toLowerCase());
+  if(existing){$("#f-cat").value=existing;return;}
+  extraCats.push(name); fillCats(name);
+});
 
 // Los nombres del desplegable salen de las recetas ya guardadas, más los añadidos con "+"
 const AUTHOR_KEY="recetario-ultimo-autor";
