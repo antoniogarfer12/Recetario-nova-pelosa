@@ -187,5 +187,27 @@
     ],
     "notes": "",
     "updated": 1791312849263
+  },
+  {
+    "id": "mux1if5xfu1l",
+    "fav": false,
+    "name": "Emulsión",
+    "cat": "Comidas",
+    "author": "Martí",
+    "time": 5,
+    "serv": 5,
+    "ing": [
+      "Medio cuenco de aceite virgen extra",
+      "1 pizca de sal",
+      "Medio limón exprimido",
+      "Pimienta",
+      "Albahaca",
+      "Tenedor"
+    ],
+    "steps": [
+      "Batir todos los ingredientes hasta que sea una crema /emulsion"
+    ],
+    "notes": "",
+    "updated": 1791313003077
   }
 ]
