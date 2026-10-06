@@ -136,5 +136,33 @@
     ],
     "notes": "",
     "updated": 1791312424263
+  },
+  {
+    "id": "mux1bn6dj0uh",
+    "fav": false,
+    "name": "Ragú",
+    "cat": "Comidas",
+    "author": "Martí",
+    "time": 240,
+    "serv": 5,
+    "ing": [
+      "500gr de carne picada (da igual el animal depende del gusto",
+      "Medio vaso de Vino blanco",
+      "1 cebolla",
+      "Mucha albahaca",
+      "Sal",
+      "Pimienta",
+      "1 vasito de tomate NATURAL",
+      "1 vaso de agua"
+    ],
+    "steps": [
+      "Cortar la cebolla en cachos o muy pequeños o grandes en hojas (depende del gusto y sofreír con abundante aceite",
+      "Después del sofrito añadir la carne picada y mezclar bien añadiendo el vasito de vino y la sal (a ojo)",
+      "Echar el tomate natural todo",
+      "Echar mucha albahaca y remover",
+      "Añadir el vaso de agua y dejar a fuego bajo durante 3 horas"
+    ],
+    "notes": "",
+    "updated": 1791312686869
   }
 ]
