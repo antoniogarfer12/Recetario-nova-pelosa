@@ -1,25 +1,5 @@
 [
   {
-    "id": "muwekwz33cep",
-    "fav": false,
-    "name": "Muslo de pollo con emulsión de limón",
-    "cat": "Principales",
-    "author": "Antonio",
-    "time": 20,
-    "serv": 1,
-    "ing": [
-      "Muslo de pollo",
-      "Limón",
-      "Sal"
-    ],
-    "steps": [
-      "Pon el pollo a la plancha a fuego medio",
-      "Echa limón y sal al gusto"
-    ],
-    "notes": "Los envidiosos dirán que no es emulsión",
-    "updated": 1791279593908
-  },
-  {
     "id": "muwiwpdpf5p4",
     "fav": false,
     "name": "Fiambre de pollo",
