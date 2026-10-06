@@ -18,5 +18,33 @@
     ],
     "notes": "Los envidiosos dirán que no es emulsión",
     "updated": 1791279593908
+  },
+  {
+    "id": "muwiwpdpf5p4",
+    "fav": false,
+    "name": "Fiambre de pollo",
+    "cat": "Desayunos",
+    "author": "María",
+    "time": 40,
+    "serv": null,
+    "ing": [
+      "1 pechuga pollo",
+      "2 cucharadas aceite de oliva",
+      "2 cucharadas pimentón dulce",
+      "1 cucharada pequeña de sal",
+      "1 cucharada de ajo en polvo",
+      "1 cucharada de tomillo",
+      "1 cucharada de orégano",
+      "Pimienta negra (al gusto)"
+    ],
+    "steps": [
+      "Mezclar en un bol todas las especias junto con el aceite",
+      "Untar la pechuga de pollo con la mezcla y dejar reposar en un tupper al menos una hora",
+      "Envolver la pechuga en papel de horno",
+      "Calentar el horno a 180 grados y hornear la pechuga 30 minutos por un lado y 10 por el otro",
+      "Cuando esté listo, córtala en láminas muy finas y consérvala en un tupper"
+    ],
+    "notes": "Échale un chorro de limón una vez cortado",
+    "updated": 1791281756796
   }
 ]
