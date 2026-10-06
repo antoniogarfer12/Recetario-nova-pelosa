@@ -49,5 +49,24 @@ for fila in ws.iter_rows(min_row=2):
 
 ws.freeze_panes = "A2"
 ws.auto_filter.ref = ws.dimensions
+
+# Hoja con el menú semanal
+ruta_menu = RAIZ / "menu.json"
+menu = json.loads(ruta_menu.read_text(encoding="utf-8")) if ruta_menu.exists() else {}
+nombres = {r.get("id"): r.get("name", "") for r in recetas}
+wm = wb.create_sheet("Menú semanal")
+wm.append(["Día", "Desayuno", "Comida", "Cena"])
+for celda in wm[1]:
+    celda.font = Font(bold=True)
+    celda.fill = PatternFill("solid", fgColor="E2B33C")
+for dia in ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]:
+    comidas = menu.get(dia) or {}
+    wm.append([dia] + [nombres.get(comidas.get(k), "") for k in ("desayuno", "comida", "cena")])
+for i, ancho in enumerate([12, 30, 30, 30], start=1):
+    wm.column_dimensions[get_column_letter(i)].width = ancho
+for celda in wm["A"][1:]:
+    celda.font = Font(bold=True)
+wm.freeze_panes = "A2"
+
 wb.save(RAIZ / "recetas.xlsx")
 print(f"recetas.xlsx generado con {len(recetas)} recetas")

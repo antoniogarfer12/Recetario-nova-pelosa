@@ -81,12 +81,26 @@ header .sync-line{margin-top:-1rem;font-size:.9rem}
 .link{background:none;border:0;padding:0;color:inherit;text-decoration:underline;text-underline-offset:2px}
 .btn[disabled]{opacity:.6;cursor:progress}
 .pick{display:flex;gap:.5rem}
-.pick select{flex:1}
+.pick select{flex:1;min-width:0}
 .pick .btn{padding:0 1rem;font-size:1.3rem;line-height:1}
+.tabs{display:flex;gap:.4rem;margin-bottom:1.2rem}
+.tabs button{flex:1;border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:.55rem 1rem;font-weight:600}
+.tabs button[aria-current="page"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.days{display:grid;gap:.9rem}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:.9rem;padding:.4rem 1.1rem 1.1rem}
+.day h3{font-size:1.35rem;margin-top:.6rem}
+.day label{margin-top:.7rem}
+.day .pick .btn{font-size:.95rem}
+.day .btn[disabled]{cursor:default}
 </style>
 </head>
 <body>
 <div class="wrap">
+
+  <nav id="tabs" class="tabs" aria-label="Secciones">
+    <button data-go="list" aria-current="page">Recetas</button>
+    <button data-go="menu" aria-current="false">Menú semanal</button>
+  </nav>
 
   <!-- LISTA -->
   <div id="v-list" class="view on">
@@ -100,6 +114,21 @@ header .sync-line{margin-top:-1rem;font-size:.9rem}
     </div>
     <div id="chips" class="chips" role="group" aria-label="Filtrar por categoría"></div>
     <div id="list" class="list"></div>
+  </div>
+
+  <!-- MENÚ SEMANAL -->
+  <div id="v-menu" class="view">
+    <header>
+      <h1>Menú semanal</h1>
+      <p>Elige una receta de desayuno, comida y cena para cada día. Salen las recetas de las categorías Desayunos, Comidas y Cenas.</p>
+    </header>
+    <form id="menu-form">
+      <div id="menu-days" class="days"></div>
+      <div class="actions">
+        <button type="submit" class="btn btn-main">Guardar menú</button>
+        <button type="button" class="btn btn-danger" id="menu-clear">Vaciar menú</button>
+      </div>
+    </form>
   </div>
 
   <!-- DETALLE -->
@@ -156,11 +185,13 @@ header .sync-line{margin-top:-1rem;font-size:.9rem}
 <div id="toast" class="toast" role="status"></div>
 
 <script>
-const CATS=["Entrantes","Principales","Postres","Desayunos","Bebidas","Otros"];
-const OLD_KEY="recetario-v1", CACHE_KEY="recetario-cache-v2", TOKEN_KEY="recetario-token";
-const REPO="antoniogarfer12/Recetario-nova-pelosa", FILE="recetas.json", BRANCH="main";
-const API=`https://api.github.com/repos/${REPO}/contents/${FILE}`;
-let recipes=[], filter="Todas", editingId=null, token="";
+const CATS=["Desayunos","Comidas","Cenas","Entrantes","Principales","Postres","Bebidas","Otros"];
+const OLD_KEY="recetario-v1", CACHE_KEY="recetario-cache-v2", TOKEN_KEY="recetario-token", MENU_CACHE_KEY="recetario-menu";
+const REPO="antoniogarfer12/Recetario-nova-pelosa", FILE="recetas.json", MENU_FILE="menu.json", BRANCH="main";
+const apiUrl=file=>`https://api.github.com/repos/${REPO}/contents/${file}`;
+const DAYS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const MEALS=[["desayuno","Desayuno"],["comida","Comida"],["cena","Cena"]];
+let recipes=[], filter="Todas", editingId=null, token="", menu={}, mainView="list";
 
 const store={
   get(k){try{return localStorage.getItem(k);}catch(e){return null;}},
@@ -168,23 +199,24 @@ const store={
   del(k){try{localStorage.removeItem(k);}catch(e){}}
 };
 const parseList=s=>{try{const x=JSON.parse(s);return Array.isArray(x)?x:[];}catch(e){return [];}};
+const parseObj=s=>{try{const x=JSON.parse(s);return x&&typeof x==="object"&&!Array.isArray(x)?x:{};}catch(e){return {};}};
 const b64enc=s=>{let bin="";new TextEncoder().encode(s).forEach(b=>bin+=String.fromCharCode(b));return btoa(bin);};
 const b64dec=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,"")),c=>c.charCodeAt(0)));
 
 function setStatus(msg){$("#sync-status").textContent=msg;}
 
-// Lee recetas.json del repositorio (devuelve lista y sha para poder escribir después)
-async function fetchRemote(){
+// Lee un JSON del repositorio (devuelve el contenido y el sha para poder escribir después)
+async function fetchRemote(file=FILE,parse=parseList){
   const h={Accept:"application/vnd.github+json"};
   if(token) h.Authorization="Bearer "+token;
-  const res=await fetch(`${API}?ref=${BRANCH}`,{headers:h,cache:"no-store"});
-  if(res.status===404) return {list:[],sha:null};
+  const res=await fetch(`${apiUrl(file)}?ref=${BRANCH}`,{headers:h,cache:"no-store"});
+  if(res.status===404) return {list:parse(""),sha:null};
   if(!res.ok) throw new Error(res.status===401?"Token no válido o caducado":"GitHub respondió "+res.status);
   const j=await res.json();
-  return {list:parseList(b64dec(j.content)),sha:j.sha};
+  return {list:parse(b64dec(j.content)),sha:j.sha};
 }
-async function putRemote(list,sha,message){
-  const res=await fetch(API,{method:"PUT",headers:{Accept:"application/vnd.github+json",Authorization:"Bearer "+token,"Content-Type":"application/json"},
+async function putRemote(list,sha,message,file=FILE){
+  const res=await fetch(apiUrl(file),{method:"PUT",headers:{Accept:"application/vnd.github+json",Authorization:"Bearer "+token,"Content-Type":"application/json"},
     body:JSON.stringify({message,branch:BRANCH,sha:sha||undefined,content:b64enc(JSON.stringify(list,null,2)+"\n")})});
   if(res.status===409||res.status===422) throw Object.assign(new Error("conflict"),{conflict:true});
   if(!res.ok) throw new Error(res.status===401||res.status===403?"El token no tiene permiso de escritura":"GitHub respondió "+res.status);
@@ -219,22 +251,45 @@ async function migrateLocal(){
   if(ok){store.del(OLD_KEY);toast("Recetas antiguas subidas a GitHub");}
 }
 
+// El menú se guarda entero: se sobrescribe menu.json con lo que hay en pantalla
+async function saveMenu(){
+  if(!token){toast("Configura la sincronización para guardar cambios");show("sync");return false;}
+  setStatus("Guardando en GitHub…");
+  try{
+    for(let i=0;;i++){
+      const {sha}=await fetchRemote(MENU_FILE,parseObj);
+      try{await putRemote(menu,sha,"Actualizar menú semanal",MENU_FILE);break;}
+      catch(e){if(!e.conflict||i>=2) throw e;}
+    }
+    store.set(MENU_CACHE_KEY,JSON.stringify(menu));
+    setStatus("Sincronizado");
+    return true;
+  }catch(e){
+    setStatus("Error al guardar: "+e.message);
+    toast("No se ha podido guardar en GitHub");
+    return false;
+  }
+}
+
 async function sync(){
   try{
-    const {list}=await fetchRemote();
+    const [{list},m]=await Promise.all([fetchRemote(),fetchRemote(MENU_FILE,parseObj)]);
     recipes=list; store.set(CACHE_KEY,JSON.stringify(recipes));
+    menu=m.list; store.set(MENU_CACHE_KEY,JSON.stringify(menu));
     setStatus(token?"Sincronizado":"Solo lectura");
     await migrateLocal();
   }catch(e){
     setStatus("Sin conexión con GitHub ("+e.message+"), mostrando copia local");
   }
   renderList();
+  if(mainView==="menu"&&$("#v-menu").classList.contains("on")) renderMenu();
 }
 
 function load(){
   token=store.get(TOKEN_KEY)||"";
   recipes=parseList(store.get(CACHE_KEY));
   if(!recipes.length) recipes=parseList(store.get(OLD_KEY));
+  menu=parseObj(store.get(MENU_CACHE_KEY));
 }
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -244,8 +299,39 @@ function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");
 
 function show(v){
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
+  if(v==="list"||v==="menu") mainView=v;
   $("#add").style.display=v==="list"?"":"none";
+  $("#tabs").style.display=v==="list"||v==="menu"?"":"none";
+  document.querySelectorAll("#tabs [data-go]").forEach(b=>b.setAttribute("aria-current",b.dataset.go===v?"page":"false"));
   window.scrollTo(0,0);
+}
+
+// Qué comida del menú corresponde a una categoría (admite "Comida"/"Comidas", con o sin tilde)
+const mealOf=cat=>{
+  const c=String(cat||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  return c.startsWith("desayun")?"desayuno":c.startsWith("comida")?"comida":c.startsWith("cena")?"cena":null;
+};
+
+function renderMenu(){
+  const byMeal={};
+  MEALS.forEach(([k])=>byMeal[k]=recipes.filter(r=>mealOf(r.cat)===k).sort((a,b)=>a.name.localeCompare(b.name,"es")));
+  $("#menu-days").innerHTML=DAYS.map(d=>`
+    <section class="day"><h3>${d}</h3>
+      ${MEALS.map(([k,label])=>{
+        const sel=menu[d]?.[k]||"";
+        const opts=byMeal[k].slice();
+        const cur=recipes.find(r=>r.id===sel);
+        if(cur&&!opts.includes(cur)) opts.unshift(cur);
+        const id=`m-${DAYS.indexOf(d)}-${k}`;
+        return `<label for="${id}">${label}</label>
+        <div class="pick">
+          <select id="${id}" data-day="${d}" data-meal="${k}">
+            <option value="">${opts.length?"— Sin elegir —":`— No hay recetas de ${label.toLowerCase()} —`}</option>
+            ${opts.map(r=>`<option value="${r.id}"${r.id===sel?" selected":""}>${esc(r.name)}</option>`).join("")}
+          </select>
+          <button type="button" class="btn btn-ghost" data-open="${cur?cur.id:""}"${cur?"":" disabled"}>Ver</button>
+        </div>`;}).join("")}
+    </section>`).join("");
 }
 
 function renderChips(){
@@ -276,7 +362,7 @@ function renderList(){
 function renderDetail(id){
   const r=recipes.find(x=>x.id===id); if(!r) return show("list");
   $("#v-detail").innerHTML=`
-    <button class="back" data-go="list">‹ Todas las recetas</button>
+    <button class="back" data-go="${mainView}">‹ ${mainView==="menu"?"Volver al menú":"Todas las recetas"}</button>
     <h2>${esc(r.name)}</h2>
     <div class="meta"><span>${esc(r.cat)}</span>${r.author?`<span>por ${esc(r.author)}</span>`:""}${r.time?`<span>${r.time} min</span>`:""}${r.serv?`<span>${r.serv} raciones</span>`:""}</div>
     ${r.ing.length?`<section><h3>Ingredientes</h3><ul class="ing">${r.ing.map((i,n)=>`<li><input type="checkbox" id="i${n}" aria-label="Tengo ${esc(i)}"><span>${esc(i)}</span></li>`).join("")}</ul></section>`:""}
@@ -385,7 +471,11 @@ $("#forget").addEventListener("click",()=>{token="";store.del(TOKEN_KEY);setStat
 
 document.addEventListener("click",async e=>{
   const t=e.target.closest("button,li"); if(!t) return;
-  if(t.dataset.go){ if(t.dataset.go==="list"){renderList();show("list");} else show(t.dataset.go); }
+  if(t.dataset.go){
+    if(t.dataset.go==="list"){renderList();show("list");}
+    else if(t.dataset.go==="menu"){renderMenu();show("menu");}
+    else show(t.dataset.go);
+  }
   else if(t.dataset.chip){filter=t.dataset.chip;renderList();}
   else if(t.dataset.open){renderDetail(t.dataset.open);}
   else if(t.dataset.edit){openForm(t.dataset.edit);}
@@ -405,7 +495,27 @@ document.addEventListener("click",async e=>{
   }
   else if(t.id==="add"){ if(token) openForm(); else {toast("Configura la sincronización para añadir recetas");show("sync");} }
 });
-document.addEventListener("change",e=>{if(e.target.matches(".ing input")) e.target.closest("li").classList.toggle("done",e.target.checked);});
+document.addEventListener("change",e=>{
+  if(e.target.matches(".ing input")) e.target.closest("li").classList.toggle("done",e.target.checked);
+  if(e.target.matches("#menu-days select")){
+    const {day,meal}=e.target.dataset, v=e.target.value;
+    menu[day]=menu[day]||{};
+    if(v) menu[day][meal]=v; else delete menu[day][meal];
+    if(!Object.keys(menu[day]).length) delete menu[day];
+    const ver=e.target.nextElementSibling; ver.dataset.open=v; ver.disabled=!v;
+  }
+});
+$("#menu-form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const btn=e.submitter||$("#menu-form [type=submit]"); btn.disabled=true;
+  if(await saveMenu()) toast("Menú guardado");
+  btn.disabled=false;
+});
+$("#menu-clear").addEventListener("click",async()=>{
+  if(!confirm("¿Vaciar el menú de toda la semana?")) return;
+  menu={}; renderMenu();
+  if(await saveMenu()) toast("Menú vaciado");
+});
 $("#q").addEventListener("input",renderList);
 
 load(); renderList(); sync();

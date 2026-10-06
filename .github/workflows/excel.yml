@@ -3,7 +3,7 @@ name: Actualizar Excel de recetas
 on:
   push:
     branches: [main]
-    paths: [recetas.json, scripts/generar_excel.py, .github/workflows/excel.yml]
+    paths: [recetas.json, menu.json, scripts/generar_excel.py, .github/workflows/excel.yml]
   workflow_dispatch:
 
 permissions:
