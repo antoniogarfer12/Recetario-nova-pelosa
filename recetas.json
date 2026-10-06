@@ -177,5 +177,28 @@
     "steps": [],
     "notes": "",
     "updated": 1791312721031
+  },
+  {
+    "id": "mux1f4hbttgv",
+    "fav": false,
+    "name": "Filete empanado Martí",
+    "cat": "Comidas",
+    "author": "Martí",
+    "time": 45,
+    "serv": 6,
+    "ing": [
+      "500gr de pollo del corral fileteado",
+      "3 huevos",
+      "Aceite virgen extra",
+      "Ralladura para empanar de Maíz"
+    ],
+    "steps": [
+      "Batir los huevos con sal y pimienta",
+      "Rebozar el pollo en el maíz",
+      "Freír con aceite virgen extra",
+      "Escurrir el filete en papel de cocina"
+    ],
+    "notes": "",
+    "updated": 1791312849263
   }
 ]
