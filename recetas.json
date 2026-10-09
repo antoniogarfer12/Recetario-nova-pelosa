@@ -235,5 +235,37 @@
     "steps": [],
     "notes": "",
     "updated": 1791316693236
+  },
+  {
+    "id": "mv1ltb070wnc",
+    "fav": false,
+    "name": "Puré de calabaza",
+    "cat": "Comidas",
+    "author": "María",
+    "time": 120,
+    "serv": 4,
+    "ing": [
+      "2 calabacines",
+      "500g calabaza",
+      "1 cebolla",
+      "2 puerros",
+      "2 patatas",
+      "4 zanahorias",
+      "6 quesitos",
+      "1 trozo jamón",
+      "Pimienta",
+      "Sal",
+      "Aceite"
+    ],
+    "steps": [
+      "Echar aceite en la olla y sofreír la cebolla y el puerro",
+      "Cuando la cebolla y el puerro estén, echar el resto de verduras, sal y pimienta y sofreír dos minutos",
+      "Cubrir con agua toda la verdura",
+      "Dejar cocer aproximadamente 1h hasta que toda la verdura esté blanda",
+      "Echar el trozo de jamón y dejarlo cocer 10 minutos más",
+      "Echar los quesitos hasta que se deshagan y batir todo"
+    ],
+    "notes": "",
+    "updated": 1791588967927
   }
 ]
